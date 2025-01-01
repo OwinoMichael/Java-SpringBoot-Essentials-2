@@ -1,5 +1,7 @@
 package com.example.demo.Transaction;
 
+import com.example.demo.Event.TransferEvent;
+import com.example.demo.Event.TransferEventPublisher;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,8 +14,11 @@ public class TransferCommandHandler {
 
     private final BankAccountRepository bankAccountRepository;
 
-    public TransferCommandHandler(BankAccountRepository bankAccountRepository) {
+    private final TransferEventPublisher transferEventPublisher;
+
+    public TransferCommandHandler(BankAccountRepository bankAccountRepository, TransferEventPublisher transferEventPublisher) {
         this.bankAccountRepository = bankAccountRepository;
+        this.transferEventPublisher = transferEventPublisher;
     }
 
     public ResponseEntity transfer(TransferDTO transferDTO){
@@ -32,6 +37,7 @@ public class TransferCommandHandler {
         //
         deduct(from, transferDTO.getAmount());
 
+        transferEventPublisher.publish(this, transferDTO);
         return ResponseEntity.ok("Success");
     }
 
